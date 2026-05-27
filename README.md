@@ -66,13 +66,3 @@ source .venv/bin/activate
 python -m unittest discover -s tests -v
 ```
 
-## 发布到 GitHub
-
-首次发布前，在 GitHub 创建一个空仓库，不要勾选自动生成 README、`.gitignore` 或 License，然后在本目录执行：
-
-```bash
-git remote add origin https://github.com/<your-name>/ai-deepseek-xmind-drawio.git
-git push -u origin main
-```
-
-`.venv`、`.env` 和系统缓存文件已加入忽略规则，不会将本地环境或 API Key 上传到仓库。
