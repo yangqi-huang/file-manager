@@ -15,7 +15,7 @@
       </header>
 
       <section class="workspace">
-        <form id="generate-form" class="panel controls">
+        <form id="generate-form" class="panel controls upload-card">
           <div id="drop-zone" class="drop-zone" tabindex="0" role="button" aria-label="选择或拖入文档">
             <input id="file-input" name="file" type="file" accept=".txt,.md,.csv,.json,.xml,.html,.docx,.pptx,.xlsx,.pdf" hidden required>
             <p class="drop-title">拖入文件，或点击选择</p>
@@ -37,14 +37,16 @@
             <input id="use-ai" type="checkbox" checked>
             <span>优先使用 DeepSeek（未配置密钥时自动本地预览）</span>
           </label>
-          <button id="submit-button" class="primary" type="submit">生成结构图文件</button>
-          <button id="demo-button" class="secondary" type="button">体验示例文档</button>
-          <p id="status" class="status" aria-live="polite">准备就绪</p>
+          <div class="form-actions">
+            <button id="submit-button" class="primary" type="submit">生成结构图文件</button>
+            <button id="demo-button" class="secondary" type="button">体验示例文档</button>
+            <p id="status" class="status" aria-live="polite">准备就绪</p>
+          </div>
         </form>
 
         <section class="panel result" aria-label="生成结果">
           <div id="empty-state" class="empty-state">
-            <p>生成后可在这里预览结构并下载文件。</p>
+            <p>生成后可在这里直接查看图形并下载文件。</p>
           </div>
           <div id="result-content" class="hidden">
             <div class="result-heading">
@@ -55,17 +57,39 @@
               </div>
             </div>
             <div id="warnings" class="warnings hidden"></div>
+            <article class="diagram-preview-card">
+              <div class="diagram-preview-heading">
+                <h3>图形预览</h3>
+                <div class="diagram-preview-meta">
+                  <span id="diagram-kind" class="diagram-kind"></span>
+                  <div class="diagram-controls" aria-label="图形缩放控制">
+                    <button id="zoom-out" type="button" aria-label="缩小图形">−</button>
+                    <span id="zoom-level" class="zoom-level">100%</span>
+                    <button id="zoom-in" type="button" aria-label="放大图形">+</button>
+                    <button id="zoom-fit" class="control-label" type="button">适应窗口</button>
+                    <button id="zoom-reset" class="control-label" type="button">100%</button>
+                  </div>
+                </div>
+              </div>
+              <p class="diagram-hint">完整文字将自动换行；滚轮缩放，按住鼠标拖动画布查看较大的图。</p>
+              <div id="diagram-stage" class="diagram-stage">
+                <svg id="diagram-preview" role="img" aria-label="生成的结构图预览"></svg>
+              </div>
+            </article>
             <div class="downloads" id="downloads"></div>
-            <div class="preview-grid">
-              <article>
-                <h3>结构预览</h3>
-                <div id="tree-preview" class="tree-preview"></div>
-              </article>
-              <article>
-                <h3>提取文本</h3>
-                <pre id="text-preview" class="text-preview"></pre>
-              </article>
-            </div>
+            <details class="detail-section">
+              <summary>查看结构数据与提取文本</summary>
+              <div class="preview-grid">
+                <article>
+                  <h3>结构数据</h3>
+                  <div id="tree-preview" class="tree-preview"></div>
+                </article>
+                <article>
+                  <h3>提取文本</h3>
+                  <pre id="text-preview" class="text-preview"></pre>
+                </article>
+              </div>
+            </details>
           </div>
         </section>
       </section>
@@ -75,7 +99,7 @@
         <div class="steps">
           <p><strong>1</strong> 上传包含文字内容的办公文件。</p>
           <p><strong>2</strong> 配置 <code>DEEPSEEK_API_KEY</code> 获取 AI 提炼效果；不配置也能体验导出链路。</p>
-          <p><strong>3</strong> 将 <code>.md</code> 导入 XMind，或在 draw.io 中打开 <code>.drawio</code>。</p>
+          <p><strong>3</strong> 网页中直接查看图形，也可将 <code>.md</code> 导入 XMind 或打开 <code>.drawio</code>。</p>
         </div>
       </section>
     </main>

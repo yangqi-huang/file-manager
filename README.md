@@ -6,6 +6,7 @@
 
 - 使用 DeepSeek 把原文整理为思维导图、流程图、组织图或知识树。
 - 未配置 API Key 时使用本地预览规则，方便先体验上传和导出流程。
+- 在网页中直接绘制可视化思维导图或流程/组织图预览，节点文字完整换行展示，并支持缩放、适应窗口与拖动画布浏览大图。
 - 生成 XMind 可导入的 Markdown 文件。
 - 生成 Mermaid 文件和可直接在 draw.io 打开的 `.drawio` XML 文件。
 - DOCX、PPTX、XLSX 使用 Python 标准库提取文本；PDF 支持作为可选能力。
@@ -34,7 +35,7 @@ python server.py
 不设置密钥时，页面仍可生成本地演示结果。接入 DeepSeek 时，在启动服务前设置环境变量：
 
 ```bash
-export DEEPSEEK_API_KEY="你的 API Key"
+export DEEPSEEK_API_KEY="sk_your_api_key_here"  # 请替换为新创建的真实密钥
 python server.py
 ```
 
@@ -46,6 +47,8 @@ export DEEPSEEK_BASE_URL="https://api.deepseek.com/chat/completions"
 ```
 
 涉及敏感公司文件时，请确认其允许上传到所配置的模型服务，或先做脱敏处理。
+
+不要将真实密钥写入 `.env.example` 或提交到 Git。若页面提示使用了示例占位文字，请确认启动服务的终端中设置的是实际 API Key，而不是 README 中的示例值。
 
 ## 文件导入
 

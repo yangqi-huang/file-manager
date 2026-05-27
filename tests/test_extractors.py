@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from io import BytesIO
+import builtins
 import unittest
+from unittest.mock import patch
 import zipfile
 
 from office_diagram.extractors import ExtractionError, extract_text
@@ -34,7 +36,18 @@ class ExtractorTests(unittest.TestCase):
         with self.assertRaises(ExtractionError):
             extract_text("image.png", b"content")
 
+    def test_pdf_dependency_error_points_to_virtual_environment(self) -> None:
+        original_import = builtins.__import__
+
+        def missing_pypdf(name: str, *args: object, **kwargs: object) -> object:
+            if name == "pypdf":
+                raise ImportError("not installed")
+            return original_import(name, *args, **kwargs)
+
+        with patch("builtins.__import__", side_effect=missing_pypdf):
+            with self.assertRaisesRegex(ExtractionError, r"source \.venv/bin/activate"):
+                extract_text("report.pdf", b"%PDF")
+
 
 if __name__ == "__main__":
     unittest.main()
-

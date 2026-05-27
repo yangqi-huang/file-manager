@@ -44,6 +44,20 @@ class ServiceTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             generate_diagrams({"diagram_type": "unknown"})
 
+    def test_local_mode_keeps_long_node_text_in_exports(self) -> None:
+        text = "这是一个需要完整展示而不能在图形节点中被省略的较长工作事项描述" * 3
+        payload = {
+            "filename": "长文本.txt",
+            "diagram_type": "mindmap",
+            "use_ai": False,
+            "content_base64": base64.b64encode(text.encode("utf-8")).decode("ascii"),
+        }
+
+        result = generate_diagrams(payload)
+
+        self.assertIn(text, result["files"]["长文本-xmind.md"])
+        self.assertIn(text, result["spec"]["root"]["children"][0]["label"])
+
 
 if __name__ == "__main__":
     unittest.main()

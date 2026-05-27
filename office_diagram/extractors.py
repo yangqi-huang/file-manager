@@ -112,7 +112,9 @@ def _extract_pdf(content: bytes) -> str:
         from pypdf import PdfReader
     except ImportError as exc:
         raise ExtractionError(
-            "PDF 解析需要安装可选依赖：python3 -m pip install pypdf"
+            "当前启动服务的 Python 未安装 PDF 依赖。请停止服务后执行："
+            "source .venv/bin/activate && python -m pip install -r requirements.txt "
+            "&& python server.py"
         ) from exc
     try:
         reader = PdfReader(BytesIO(content))

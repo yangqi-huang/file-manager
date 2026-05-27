@@ -10,7 +10,7 @@ _WHITESPACE = re.compile(r"\s+")
 
 def clean_label(value: object, fallback: str = "未命名节点") -> str:
     text = _WHITESPACE.sub(" ", str(value or "")).strip()
-    return text[:120] or fallback
+    return text or fallback
 
 
 @dataclass
@@ -59,4 +59,3 @@ class DiagramSpec:
             "diagram_type": self.diagram_type,
             "root": self.root.as_dict(),
         }
-

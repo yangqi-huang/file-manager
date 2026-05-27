@@ -37,6 +37,13 @@ class DeepSeekGenerator:
     def generate(self, text: str, filename: str, diagram_type: str) -> DiagramSpec:
         if not self.configured:
             raise GenerationError("尚未配置 DEEPSEEK_API_KEY。")
+        if not self.api_key.isascii() or self.api_key in {
+            "your_api_key_here",
+            "sk_your_api_key_here",
+        }:
+            raise GenerationError(
+                "DEEPSEEK_API_KEY 必须填写真实密钥，不能使用示例占位文字。"
+            )
         prompt = _prompt(text, filename, diagram_type)
         payload = json.dumps(
             {
@@ -119,8 +126,6 @@ def _append_plain_nodes(root: Node, text: str) -> None:
     ]
     current: Node | None = None
     for line in meaningful[:35]:
-        if len(line) > 70:
-            line = line[:67] + "..."
         if _looks_like_heading(line) or current is None:
             current = Node(clean_label(line))
             root.children.append(current)

@@ -27,6 +27,12 @@ class ServerTests(unittest.TestCase):
 
         self.assertIn("AI 办公结构图助手", page)
         self.assertIn("体验示例文档", page)
+        self.assertIn('id="diagram-preview"', page)
+        self.assertIn("图形预览", page)
+        self.assertIn('id="zoom-in"', page)
+        self.assertIn("适应窗口", page)
+        self.assertIn("完整文字将自动换行", page)
+        self.assertIn("upload-card", page)
 
     def test_generation_endpoint(self) -> None:
         payload = json.dumps(
