@@ -153,6 +153,29 @@ legend {
   border-radius: 10px;
 }
 
+.detail-setting {
+  display: block;
+  margin-top: 13px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.detail-setting span {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.detail-setting select {
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid #dce5f4;
+  border-radius: 9px;
+  color: var(--ink);
+  background: #fff;
+  font: inherit;
+}
+
 input {
   accent-color: var(--blue);
 }

@@ -33,6 +33,8 @@ class ServerTests(unittest.TestCase):
         self.assertIn("适应窗口", page)
         self.assertIn("完整文字将自动换行", page)
         self.assertIn("upload-card", page)
+        self.assertIn('id="detail-level"', page)
+        self.assertIn("详细（推荐", page)
 
     def test_generation_endpoint(self) -> None:
         payload = json.dumps(

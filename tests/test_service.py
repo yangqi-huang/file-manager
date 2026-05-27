@@ -4,10 +4,14 @@ import base64
 import unittest
 from unittest.mock import patch
 
-from office_diagram.service import generate_diagrams
+from office_diagram.models import DiagramSpec, Node
+from office_diagram.service import _AI_CACHE, generate_diagrams
 
 
 class ServiceTests(unittest.TestCase):
+    def setUp(self) -> None:
+        _AI_CACHE.clear()
+
     def test_local_mode_produces_all_downloads(self) -> None:
         payload = {
             "filename": "启动会.md",
@@ -44,6 +48,10 @@ class ServiceTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             generate_diagrams({"diagram_type": "unknown"})
 
+    def test_rejects_unknown_detail_level(self) -> None:
+        with self.assertRaises(ValueError):
+            generate_diagrams({"detail_level": "random"})
+
     def test_local_mode_keeps_long_node_text_in_exports(self) -> None:
         text = "这是一个需要完整展示而不能在图形节点中被省略的较长工作事项描述" * 3
         payload = {
@@ -57,6 +65,29 @@ class ServiceTests(unittest.TestCase):
 
         self.assertIn(text, result["files"]["长文本-xmind.md"])
         self.assertIn(text, result["spec"]["root"]["children"][0]["label"])
+
+    @patch("office_diagram.service.DeepSeekGenerator")
+    def test_reuses_ai_result_for_identical_input(self, mocked_generator: object) -> None:
+        ai = mocked_generator.return_value
+        ai.configured = True
+        ai.model = "deepseek-chat"
+        ai.base_url = "https://api.deepseek.com/chat/completions"
+        ai.generate.return_value = DiagramSpec("标题", "mindmap", Node("标题"))
+        payload = {
+            "filename": "重复文件.md",
+            "diagram_type": "mindmap",
+            "detail_level": "detailed",
+            "use_ai": True,
+            "content_base64": base64.b64encode("# 标题\n## 内容".encode("utf-8")).decode("ascii"),
+        }
+
+        first = generate_diagrams(payload)
+        second = generate_diagrams(payload)
+
+        ai.generate.assert_called_once_with("# 标题\n## 内容", "重复文件.md", "mindmap", "detailed")
+        self.assertFalse(first["cache_hit"])
+        self.assertTrue(second["cache_hit"])
+        self.assertIn("已复用相同输入结果", second["generated_by"])
 
 
 if __name__ == "__main__":

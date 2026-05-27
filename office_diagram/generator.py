@@ -21,6 +21,20 @@ DIAGRAM_GUIDANCE = {
     "knowledge": "按概念、分类、事实和结论建立知识树。",
 }
 
+DETAIL_PROFILES = {
+    "concise": (
+        "简洁：仅保留主要主题与关键结论，通常使用 2-3 层、总节点数约 8-18 个。"
+    ),
+    "standard": (
+        "标准：覆盖文档中所有明确章节及每章核心要点，通常使用 3-4 层、"
+        "总节点数约 15-35 个。"
+    ),
+    "detailed": (
+        "详细：覆盖文档中所有明确章节，并尽量保留事项、步骤、责任、日期、"
+        "指标、风险和结论等可成节点的信息；使用 3-4 层，总节点数通常为 25-60 个。"
+    ),
+}
+
 
 class DeepSeekGenerator:
     def __init__(self) -> None:
@@ -34,7 +48,9 @@ class DeepSeekGenerator:
     def configured(self) -> bool:
         return bool(self.api_key)
 
-    def generate(self, text: str, filename: str, diagram_type: str) -> DiagramSpec:
+    def generate(
+        self, text: str, filename: str, diagram_type: str, detail_level: str = "detailed"
+    ) -> DiagramSpec:
         if not self.configured:
             raise GenerationError("尚未配置 DEEPSEEK_API_KEY。")
         if not self.api_key.isascii() or self.api_key in {
@@ -44,7 +60,7 @@ class DeepSeekGenerator:
             raise GenerationError(
                 "DEEPSEEK_API_KEY 必须填写真实密钥，不能使用示例占位文字。"
             )
-        prompt = _prompt(text, filename, diagram_type)
+        prompt = _prompt(text, filename, diagram_type, detail_level)
         payload = json.dumps(
             {
                 "model": self.model,
@@ -52,13 +68,16 @@ class DeepSeekGenerator:
                     {
                         "role": "system",
                         "content": (
-                            "你是办公文档结构化助手。只返回合法 JSON，不使用 Markdown 代码块。"
+                            "你是稳定、可复现的办公文档结构化助手。严格依据给定的固定提取规则，"
+                            "不随意改变详略程度。只返回合法 JSON，不使用 Markdown 代码块。"
                         ),
                     },
                     {"role": "user", "content": prompt},
                 ],
                 "response_format": {"type": "json_object"},
-                "temperature": 0.2,
+                "thinking": {"type": "disabled"},
+                "temperature": 0,
+                "max_tokens": 8192,
             },
             ensure_ascii=False,
         ).encode("utf-8")
@@ -140,10 +159,18 @@ def _looks_like_heading(line: str) -> bool:
     )
 
 
-def _prompt(text: str, filename: str, diagram_type: str) -> str:
+def _prompt(text: str, filename: str, diagram_type: str, detail_level: str) -> str:
     clipped = text[:60000]
+    detail_profile = DETAIL_PROFILES.get(detail_level, DETAIL_PROFILES["detailed"])
     return f"""根据以下文档生成{diagram_type}结构图数据。
 任务要求：{DIAGRAM_GUIDANCE.get(diagram_type, DIAGRAM_GUIDANCE["mindmap"])}
+细节程度：{detail_profile}
+固定提取规则：
+1. 按原文出现顺序组织一级和二级主题；有明确标题时优先沿用标题，不随机改写分类方式。
+2. 每次都覆盖原文中明确出现的章节；在所选细节程度下，不得随机忽略某一章节或要点类别。
+3. 对并列事项采用相同粒度：同一章节中若保留一种事项，则同类事项应一并保留。
+4. 流程图按发生顺序排列；组织图按隶属关系排列；思维导图和知识树按原文章节顺序排列。
+5. 节点文字应忠实于原文，不补充推测内容，不因追求简洁而删除关键名词、日期或责任信息。
 输出 JSON 格式必须严格为：
 {{
   "title": "图表标题",
@@ -153,7 +180,7 @@ def _prompt(text: str, filename: str, diagram_type: str) -> str:
     "children": [{{"label": "节点", "children": []}}]
   }}
 }}
-要求：节点名称简洁；最多 4 层、每层最多 12 个节点；不编造原文没有的信息。
+要求：最多 4 层、每层最多 15 个节点；如原文信息超过容量，优先保留标题、行动、决策、时间、责任、指标和风险。
 文件名：{filename}
 文档正文：
 {clipped}"""

@@ -149,6 +149,7 @@ async function requestGeneration(file) {
       filename: file.name,
       content_base64: await toBase64(file),
       diagram_type: form.elements.diagram_type.value,
+      detail_level: form.elements.detail_level.value,
       use_ai: document.querySelector("#use-ai").checked,
     }),
   });

@@ -31,6 +31,14 @@
               <label><input type="radio" name="diagram_type" value="orgchart"> 组织图</label>
               <label><input type="radio" name="diagram_type" value="knowledge"> 知识树</label>
             </div>
+            <label class="detail-setting">
+              <span>细节程度</span>
+              <select name="detail_level" id="detail-level">
+                <option value="detailed" selected>详细（推荐，覆盖尽量完整）</option>
+                <option value="standard">标准（要点平衡）</option>
+                <option value="concise">简洁（只留核心）</option>
+              </select>
+            </label>
           </fieldset>
 
           <label class="toggle">
@@ -98,7 +106,7 @@
         <h2>使用方法</h2>
         <div class="steps">
           <p><strong>1</strong> 上传包含文字内容的办公文件。</p>
-          <p><strong>2</strong> 配置 <code>DEEPSEEK_API_KEY</code> 获取 AI 提炼效果；不配置也能体验导出链路。</p>
+          <p><strong>2</strong> 选择固定细节程度并配置 <code>DEEPSEEK_API_KEY</code>；相同输入会优先复用结果。</p>
           <p><strong>3</strong> 网页中直接查看图形，也可将 <code>.md</code> 导入 XMind 或打开 <code>.drawio</code>。</p>
         </div>
       </section>
