@@ -66,6 +66,39 @@ class GeneratorTests(unittest.TestCase):
         body = json.loads(request.data.decode("utf-8"))
         self.assertIn("简洁", body["messages"][1]["content"])
 
+    @patch.dict("os.environ", {"DEEPSEEK_API_KEY": "sk-test-key"}, clear=True)
+    @patch("office_diagram.generator.urlopen", return_value=_Response())
+    def test_english_source_requires_simplified_chinese_translation(
+        self, mocked_open: object
+    ) -> None:
+        DeepSeekGenerator().generate(
+            "Customer information workflow and incident resolution steps",
+            "briefing.pdf",
+            "mindmap",
+        )
+
+        request = mocked_open.call_args.args[0]
+        prompt = json.loads(request.data.decode("utf-8"))["messages"][1]["content"]
+        self.assertIn("统一使用简体中文", prompt)
+        self.assertIn("准确翻译为简体中文", prompt)
+        self.assertIn("中文（原文）", prompt)
+
+    @patch.dict("os.environ", {"DEEPSEEK_API_KEY": "sk-test-key"}, clear=True)
+    @patch("office_diagram.generator.urlopen", return_value=_Response())
+    def test_japanese_source_requires_simplified_chinese_translation(
+        self, mocked_open: object
+    ) -> None:
+        DeepSeekGenerator().generate(
+            "顧客対応プロセスとリスク管理について説明します。",
+            "報告書.pdf",
+            "mindmap",
+        )
+
+        request = mocked_open.call_args.args[0]
+        prompt = json.loads(request.data.decode("utf-8"))["messages"][1]["content"]
+        self.assertIn("日文", prompt)
+        self.assertIn("准确翻译为简体中文", prompt)
+
 
 if __name__ == "__main__":
     unittest.main()

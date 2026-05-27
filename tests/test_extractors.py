@@ -6,7 +6,7 @@ import unittest
 from unittest.mock import patch
 import zipfile
 
-from office_diagram.extractors import ExtractionError, extract_text
+from office_diagram.extractors import ExtractionError, _normalize_pdf_text, extract_text
 
 
 class ExtractorTests(unittest.TestCase):
@@ -32,6 +32,17 @@ class ExtractorTests(unittest.TestCase):
 
         self.assertEqual(result, "启动会\n确认分工")
 
+    def test_extracts_pptx_slides_in_numeric_order(self) -> None:
+        pptx = BytesIO()
+        template = '<p:sld xmlns:p="urn:p" xmlns:a="urn:a"><a:p><a:t>{}</a:t></a:p></p:sld>'
+        with zipfile.ZipFile(pptx, "w") as archive:
+            archive.writestr("ppt/slides/slide10.xml", template.format("Final review"))
+            archive.writestr("ppt/slides/slide2.xml", template.format("Project scope"))
+
+        result = extract_text("briefing.pptx", pptx.getvalue())
+
+        self.assertLess(result.index("Project scope"), result.index("Final review"))
+
     def test_rejects_unsupported_file(self) -> None:
         with self.assertRaises(ExtractionError):
             extract_text("image.png", b"content")
@@ -47,6 +58,11 @@ class ExtractorTests(unittest.TestCase):
         with patch("builtins.__import__", side_effect=missing_pypdf):
             with self.assertRaisesRegex(ExtractionError, r"source \.venv/bin/activate"):
                 extract_text("report.pdf", b"%PDF")
+
+    def test_normalizes_english_words_hyphenated_across_pdf_lines(self) -> None:
+        result = _normalize_pdf_text("Customer infor-\nmation system\nRisk analysis")
+
+        self.assertEqual(result, "Customer information system\nRisk analysis")
 
 
 if __name__ == "__main__":

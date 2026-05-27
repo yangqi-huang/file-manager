@@ -8,6 +8,7 @@
 - 可选择详细、标准或简洁的固定细节程度；相同输入在服务运行期间会复用同一份 AI 结果，以降低重复生成波动。
 - 未配置 API Key 时使用本地预览规则，方便先体验上传和导出流程。
 - 在网页中直接绘制可视化思维导图或流程/组织图预览，节点文字完整换行展示，并支持缩放、适应窗口与拖动画布浏览大图。
+- 支持英文及其他语言资料：模型统一转换为简体中文结构图，必要专有名词可保留原文括注。
 - 生成 XMind 可导入的 Markdown 文件。
 - 生成 Mermaid 文件和可直接在 draw.io 打开的 `.drawio` XML 文件。
 - DOCX、PPTX、XLSX 使用 Python 标准库提取文本；PDF 支持作为可选能力。
@@ -65,4 +66,3 @@ export DEEPSEEK_BASE_URL="https://api.deepseek.com/chat/completions"
 source .venv/bin/activate
 python -m unittest discover -s tests -v
 ```
-

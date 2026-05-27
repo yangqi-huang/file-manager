@@ -64,8 +64,11 @@ def _extract_pptx(content: bytes) -> str:
     try:
         with zipfile.ZipFile(BytesIO(content)) as archive:
             slides = sorted(
-                name for name in archive.namelist()
-                if re.match(r"ppt/slides/slide\d+\.xml$", name)
+                (
+                    name for name in archive.namelist()
+                    if re.match(r"ppt/slides/slide\d+\.xml$", name)
+                ),
+                key=_numeric_xml_part,
             )
             return "\n".join(_xml_text(archive.read(name)) for name in slides)
     except (zipfile.BadZipFile, ET.ParseError) as exc:
@@ -83,8 +86,11 @@ def _extract_xlsx(content: bytes) -> str:
                     for item in strings_root
                 ]
             sheet_names = sorted(
-                name for name in archive.namelist()
-                if re.match(r"xl/worksheets/sheet\d+\.xml$", name)
+                (
+                    name for name in archive.namelist()
+                    if re.match(r"xl/worksheets/sheet\d+\.xml$", name)
+                ),
+                key=_numeric_xml_part,
             )
             lines: list[str] = []
             for number, sheet_name in enumerate(sheet_names, start=1):
@@ -107,6 +113,11 @@ def _extract_xlsx(content: bytes) -> str:
         raise ExtractionError("无法读取 XLSX 文件，文件可能已损坏。") from exc
 
 
+def _numeric_xml_part(filename: str) -> int:
+    match = re.search(r"(\d+)\.xml$", filename)
+    return int(match.group(1)) if match else 0
+
+
 def _extract_pdf(content: bytes) -> str:
     try:
         from pypdf import PdfReader
@@ -118,6 +129,12 @@ def _extract_pdf(content: bytes) -> str:
         ) from exc
     try:
         reader = PdfReader(BytesIO(content))
-        return "\n".join(page.extract_text() or "" for page in reader.pages)
+        return _normalize_pdf_text("\n".join(page.extract_text() or "" for page in reader.pages))
     except Exception as exc:
         raise ExtractionError("无法提取 PDF 内容；扫描版 PDF 需要先进行 OCR。") from exc
+
+
+def _normalize_pdf_text(text: str) -> str:
+    # Many PDFs split an English word at the visual line end with a hyphen.
+    text = re.sub(r"([A-Za-z])-\s*\n\s*([a-z])", r"\1\2", text)
+    return re.sub(r"[ \t]+\n", "\n", text)

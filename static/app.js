@@ -447,6 +447,9 @@ function measureNode(node, root) {
 
 function wrapLabel(label, lineLength) {
   const normalized = String(label || "").replace(/\s+/g, " ").trim() || "未命名节点";
+  if (/\s/.test(normalized)) {
+    return wrapWords(normalized, lineLength);
+  }
   const lines = [];
   let remainder = normalized;
   while (remainder.length > lineLength) {
@@ -455,6 +458,46 @@ function wrapLabel(label, lineLength) {
   }
   lines.push(remainder);
   return lines;
+}
+
+function wrapWords(label, lineLength) {
+  const lines = [];
+  let current = "";
+
+  label.split(" ").forEach((word) => {
+    if (word.length > lineLength) {
+      if (current) {
+        lines.push(current);
+        current = "";
+      }
+      const segments = wrapLongToken(word, lineLength);
+      lines.push(...segments.slice(0, -1));
+      current = segments[segments.length - 1];
+      return;
+    }
+    const candidate = current ? `${current} ${word}` : word;
+    if (candidate.length <= lineLength) {
+      current = candidate;
+    } else {
+      lines.push(current);
+      current = word;
+    }
+  });
+  if (current) {
+    lines.push(current);
+  }
+  return lines;
+}
+
+function wrapLongToken(token, lineLength) {
+  const segments = [];
+  let remainder = token;
+  while (remainder.length > lineLength) {
+    segments.push(remainder.slice(0, lineLength));
+    remainder = remainder.slice(lineLength);
+  }
+  segments.push(remainder);
+  return segments;
 }
 
 function svgElement(name, attributes = {}) {
