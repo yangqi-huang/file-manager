@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AI 办公结构图助手</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="hero">
+        <p class="eyebrow">DEEPSEEK + XMIND / DRAW.IO</p>
+        <h1>把办公文档整理成结构图</h1>
+        <p class="intro">上传会议纪要、方案或表格，提取要点后生成 XMind Markdown、Mermaid 和可编辑 draw.io 文件。</p>
+      </header>
+
+      <section class="workspace">
+        <form id="generate-form" class="panel controls">
+          <div id="drop-zone" class="drop-zone" tabindex="0" role="button" aria-label="选择或拖入文档">
+            <input id="file-input" name="file" type="file" accept=".txt,.md,.csv,.json,.xml,.html,.docx,.pptx,.xlsx,.pdf" hidden required>
+            <p class="drop-title">拖入文件，或点击选择</p>
+            <p class="drop-help">支持 TXT、MD、CSV、DOCX、PPTX、XLSX、PDF，最大 12 MB</p>
+            <p id="file-name" class="file-name">尚未选择文件</p>
+          </div>
+
+          <fieldset>
+            <legend>生成类型</legend>
+            <div class="choices">
+              <label><input type="radio" name="diagram_type" value="mindmap" checked> 思维导图</label>
+              <label><input type="radio" name="diagram_type" value="flowchart"> 流程图</label>
+              <label><input type="radio" name="diagram_type" value="orgchart"> 组织图</label>
+              <label><input type="radio" name="diagram_type" value="knowledge"> 知识树</label>
+            </div>
+          </fieldset>
+
+          <label class="toggle">
+            <input id="use-ai" type="checkbox" checked>
+            <span>优先使用 DeepSeek（未配置密钥时自动本地预览）</span>
+          </label>
+          <button id="submit-button" class="primary" type="submit">生成结构图文件</button>
+          <button id="demo-button" class="secondary" type="button">体验示例文档</button>
+          <p id="status" class="status" aria-live="polite">准备就绪</p>
+        </form>
+
+        <section class="panel result" aria-label="生成结果">
+          <div id="empty-state" class="empty-state">
+            <p>生成后可在这里预览结构并下载文件。</p>
+          </div>
+          <div id="result-content" class="hidden">
+            <div class="result-heading">
+              <div>
+                <p class="label">生成结果</p>
+                <h2 id="diagram-title"></h2>
+                <p id="generated-by" class="muted"></p>
+              </div>
+            </div>
+            <div id="warnings" class="warnings hidden"></div>
+            <div class="downloads" id="downloads"></div>
+            <div class="preview-grid">
+              <article>
+                <h3>结构预览</h3>
+                <div id="tree-preview" class="tree-preview"></div>
+              </article>
+              <article>
+                <h3>提取文本</h3>
+                <pre id="text-preview" class="text-preview"></pre>
+              </article>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="guide">
+        <h2>使用方法</h2>
+        <div class="steps">
+          <p><strong>1</strong> 上传包含文字内容的办公文件。</p>
+          <p><strong>2</strong> 配置 <code>DEEPSEEK_API_KEY</code> 获取 AI 提炼效果；不配置也能体验导出链路。</p>
+          <p><strong>3</strong> 将 <code>.md</code> 导入 XMind，或在 draw.io 中打开 <code>.drawio</code>。</p>
+        </div>
+      </section>
+    </main>
+    <script src="/app.js" defer></script>
+  </body>
+</html>
