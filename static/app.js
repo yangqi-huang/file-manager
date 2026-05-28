@@ -234,11 +234,12 @@ function renderDiagram(spec) {
 }
 
 function layoutMindMap(root) {
-  const horizontalGap = 232;
-  const rowGap = 24;
-  const left = [];
-  const right = [];
-  (root.children || []).forEach((node, index) => (index % 2 ? left : right).push(node));
+  const horizontalGap = 256;
+  const rowGap = 34;
+  const topChildren = root.children || [];
+  const splitIndex = Math.ceil(topChildren.length / 2);
+  const right = topChildren.slice(0, splitIndex);
+  const left = topChildren.slice(splitIndex);
   const rootMetrics = measureNode(root, true);
   const width = 1080;
   const centerX = width / 2;
@@ -259,7 +260,14 @@ function layoutMindMap(root) {
     function place(node, depth, y, parent) {
       const children = node.children || [];
       const metrics = measureNode(node, false);
-      const positioned = { node, x: centerX + side * depth * horizontalGap, y, ...metrics, depth };
+      const positioned = {
+        node,
+        x: centerX + side * depth * horizontalGap,
+        y,
+        ...metrics,
+        depth,
+        side,
+      };
       nodes.push(positioned);
       if (parent) {
         edges.push({ from: parent, to: positioned, side });
@@ -305,7 +313,11 @@ function forestHeight(nodes, rowGap) {
 function subtreeHeight(node, rowGap) {
   const ownHeight = measureNode(node, false).height;
   const children = node.children || [];
-  return Math.max(ownHeight, forestHeight(children, rowGap));
+  const childHeight = forestHeight(children, rowGap);
+  if (!childHeight) {
+    return ownHeight;
+  }
+  return ownHeight + childHeight + rowGap;
 }
 
 function layoutTopDown(root) {
@@ -392,8 +404,11 @@ function drawEdge(edge, diagramType) {
     const side = edge.to.x >= edge.from.x ? 1 : -1;
     const startX = edge.from.x + side * edge.from.width / 2;
     const endX = edge.to.x - side * edge.to.width / 2;
-    const middleX = (startX + endX) / 2;
-    d = `M ${startX} ${edge.from.y} C ${middleX} ${edge.from.y}, ${middleX} ${edge.to.y}, ${endX} ${edge.to.y}`;
+    const elbowX = startX + side * Math.min(62, Math.abs(endX - startX) * 0.42);
+    d = [
+      `M ${startX} ${edge.from.y}`,
+      `C ${elbowX} ${edge.from.y}, ${elbowX} ${edge.to.y}, ${endX} ${edge.to.y}`,
+    ].join(" ");
   } else {
     const startY = edge.from.y + edge.from.height / 2;
     const endY = edge.to.y - edge.to.height / 2;
@@ -419,11 +434,12 @@ function drawNode(positioned, diagramType) {
     height: String(positioned.height),
     rx: positioned.root ? "29" : "13",
   }));
+  const textLayout = textAlignmentFor(positioned);
   positioned.lines.forEach((line, index) => {
     const text = svgElement("text", {
-      x: "0",
+      x: String(textLayout.x),
       y: String((index - (positioned.lines.length - 1) / 2) * 18 + 5),
-      "text-anchor": "middle",
+      "text-anchor": textLayout.anchor,
     });
     text.textContent = line;
     group.appendChild(text);
@@ -437,12 +453,26 @@ function drawNode(positioned, diagramType) {
 }
 
 function measureNode(node, root) {
-  const lineLength = root ? 15 : 14;
+  const paragraph = isParagraphLike(node.label);
+  const lineLength = root ? 15 : (paragraph ? 18 : 14);
   const lines = wrapLabel(node.label, lineLength);
   const longest = Math.max(...lines.map((line) => line.length), 1);
-  const width = Math.max(root ? 176 : 154, Math.min(252, longest * 14 + 34));
+  const width = Math.max(root ? 176 : 154, Math.min(paragraph ? 310 : 252, longest * 14 + 34));
   const height = Math.max(root ? 58 : 50, lines.length * 18 + 25);
-  return { lines, width, height };
+  return { lines, width, height, paragraph };
+}
+
+function textAlignmentFor(positioned) {
+  if (positioned.root || !positioned.paragraph) {
+    return { anchor: "middle", x: 0 };
+  }
+  const inset = 17;
+  return { anchor: "start", x: -positioned.width / 2 + inset };
+}
+
+function isParagraphLike(label) {
+  const text = String(label || "").trim();
+  return text.length > 24 || /[，。；：,.!?;:]/.test(text);
 }
 
 function wrapLabel(label, lineLength) {
@@ -604,6 +634,13 @@ function stagePoint(clientX, clientY) {
 function clamp(value, minimum, maximum) {
   return Math.max(minimum, Math.min(maximum, value));
 }
+
+globalThis.__officeDiagramPreviewTest = {
+  layoutMindMap,
+  normalizeLayout,
+  measureNode,
+  textAlignmentFor,
+};
 
 function downloadType(name) {
   if (name.endsWith(".drawio")) {

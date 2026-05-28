@@ -398,6 +398,7 @@ input {
   fill: none;
   stroke: #a8bde4;
   stroke-width: 2;
+  stroke-linecap: round;
 }
 
 .diagram-arrow {
